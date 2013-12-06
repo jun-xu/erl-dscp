@@ -1,0 +1,18 @@
+{application, dscp,
+ [
+  {description, ""},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {mod, {dscp_app, []}},
+  {env, [
+  		 {listen_port,50000},
+		 {start_mod,master}
+	   %%{start_mod,snode}
+  
+  		]
+  	}
+ ]}.
