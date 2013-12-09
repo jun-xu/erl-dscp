@@ -1,7 +1,7 @@
 %% Author: sunshine
 %% Created: 2013-11-21
-%% Description: TODO: Add description to base_spout
--module(base_spout).
+%% Description: TODO: Add description to base_PE
+-module(base_PE).
 
 %%
 %% Include files
