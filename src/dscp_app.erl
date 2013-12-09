@@ -52,10 +52,10 @@ start(_Type, _StartArgs) ->
 	case application:get_env(?APP_NAME, start_mod) of
 		{ok,?MASTER_MOD} ->
 			?INFO("~p -- start [~p] node...~n",[?MODULE,?MASTER_MOD]),
-			hurr_master_sup:start_link();
+			dscp_master_sup:start_link();
 		{ok,?SNODE_MOD} ->
 			?INFO("~p -- start [~p] node...~n",[?MODULE,?SNODE_MOD]),
-			hurr_master_sup:start_link();
+			dscp_master_sup:start_link();
 		_ ->
 			?ERROR("~p -- start app failed by reason:~p~n",[?MODULE,undefined_start_mod]),
 			{error, not_found_start_mod}
