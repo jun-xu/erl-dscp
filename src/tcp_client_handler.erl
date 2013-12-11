@@ -128,28 +128,26 @@ handle_cast(_Msg, State) ->
 %% 		Handling all non call/cast messages
 %% @end
 %%--------------------------------------------------------------------
-handle_info({tcp, Socket, <<Len:32,R/binary>> = Bin}, #state{socket=Socket,buff=undefined} = State) ->
-	case erlang:byte_size(Bin) of
-		Len ->
-			case dispatcher_cmd(Socket, R) of
-				ok -> {noreply, State#state{buff=undefined}};
+handle_info({tcp, Socket, Bin}, #state{socket=Socket} = State) ->
+	%% dispatcher request and wait response.
+	case request_dispatcher:dispatcher(self(),Bin) of
+		{reply,Data} ->
+			case gen_tcp:send(Socket, Data) of
+				ok ->
+					% Flow control: enable forwarding of next TCP message
+					inet:setopts(Socket, [{active, once}]),
+					{noreply,State};
 				{error,E} ->
-			  		{stop, E, State#state{buff=undefined}}	
+					?ERROR("~p -- send data fail by reason:~p ~n",[?MODULE,E]),
+					{stop,E,State}
 			end;
-		_ ->
-			{noreply, State#state{buff={Len-4,R}}}
-	end;
-handle_info({tcp, Socket, Bin}, #state{socket=Socket,buff={ExceptLen,PreBuff}} = State) ->
-	NewBin = <<PreBuff/binary,Bin/binary>>,
-	case erlang:byte_size(NewBin) of
-		ExceptLen ->
-			case dispatcher_cmd(Socket, NewBin) of
-				ok -> {noreply, State#state{buff=undefined}};
-				{error,E} ->
-			  		{stop, E, State#state{buff=undefined}}	
-			end;
-		_ ->
-			{noreply, State#state{buff={ExceptLen,NewBin}}}
+		noreply ->
+			% Flow control: enable forwarding of next TCP message
+			inet:setopts(Socket, [{active, once}]),
+			{noreply,State};
+		{error,Error} ->
+			?ERROR("~p cmd dispatcher fails by reason:~p~n",[?MODULE,Error]),
+			{stop,Error,State}
 	end;
 
 handle_info({tcp_closed, Socket}, #state{socket=Socket} = StateData) ->
